@@ -19,7 +19,7 @@ create or alter table vacation_spots (
 -- task to merge pipeline results into target table
 create or alter task vacation_spots_update
   schedule = '1440 minute'
-  warehouse = 'quickstart_wh'
+  warehouse = 'adhoc_xsmall'
   AS MERGE INTO vacation_spots USING (
     select *
     from silver.flights_from_home flight
@@ -52,7 +52,7 @@ create or alter task vacation_spots_update
 -- task to select perfect vacation spot and send email with vacation plan
 -- NOTE: NOT ALL CORTEX ML MODELS MAY BE AVAILABLE ON ALL DEPLOYMENTS
 create or alter task email_notification
-  warehouse = 'quickstart_wh'
+  warehouse = 'adhoc_xsmall'
   after vacation_spots_update
   as 
     begin
@@ -69,7 +69,7 @@ create or alter task email_notification
       if (:options = '[]') then
         CALL SYSTEM$SEND_EMAIL(
             'email_integration',
-            '<insert your email here>', -- INSERT YOUR EMAIL HERE
+            'lisa.aguilera@drivetime.com', -- INSERT YOUR EMAIL HERE
             'New data successfully processed: No suitable vacation spots found.',
             'The query did not return any results. Consider adjusting your filters.');
       end if;
@@ -82,14 +82,14 @@ create or alter task email_notification
 
       CALL SYSTEM$SEND_EMAIL(
         'email_integration',
-        '<insert your email here>', -- INSERT YOUR EMAIL HERE
+        'lisa.aguilera@drivetime.com', -- INSERT YOUR EMAIL HERE
         'New data successfully processed: The perfect place for your summer vacation has been found.',
         :response);
     exception
         when EXPRESSION_ERROR then
             CALL SYSTEM$SEND_EMAIL(
             'email_integration',
-            '<insert your email here>', -- INSERT YOUR EMAIL HERE
+            'lisa.aguilera@drivetime.com', -- INSERT YOUR EMAIL HERE
             'New data successfully processed: Cortex LLM function inaccessible.',
             'It appears that the Cortex LLM functions are not available in your region');
     end;
